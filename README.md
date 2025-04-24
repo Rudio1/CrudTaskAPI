@@ -54,6 +54,8 @@ dotnet run
 Acesse via Swagger:
 https://localhost:5001/swagger
 
+![image](https://github.com/user-attachments/assets/509b8745-e080-43ff-8105-4cae27a04cdb)
+
 ---
 
 ## 🌐 Integração com o Front-end
