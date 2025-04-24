@@ -1,6 +1,7 @@
 ﻿using CrudTaskAPI.Application.Dto;
 using CrudTaskAPI.Application.Interfaces;
 using CrudTaskAPI.Domain.Entities;
+using CrudTaskAPI.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrudTaskAPI.Controllers
@@ -18,11 +19,9 @@ namespace CrudTaskAPI.Controllers
             _categoryService = categoryService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ChoreResponseDto>>> GetChores()
+        private ChoreResponseDto MapToResponseDto(Chore chore)
         {
-            var chores = await _choreService.GetAllAsync();
-            var result = chores.Select(chore => new ChoreResponseDto
+            return new ChoreResponseDto
             {
                 Id = chore.Id,
                 Name = chore.Name,
@@ -30,9 +29,17 @@ namespace CrudTaskAPI.Controllers
                 Active = chore.Active,
                 IsCompleted = chore.isCompleted,
                 CategoryId = chore.CategoryId,
-                CategoryName = chore.Category?.Name
-            });
+                CategoryName = chore.Category?.Name,
+                Progress = chore.Progress,
+                CreatedAt = chore.CreatedAt
+            };
+        }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ChoreResponseDto>>> GetChores()
+        {
+            var chores = await _choreService.GetAllAsync();
+            var result = chores.Select(MapToResponseDto);
             return Ok(result);
         }
 
@@ -40,24 +47,12 @@ namespace CrudTaskAPI.Controllers
         public async Task<ActionResult<ChoreResponseDto>> GetChore(int id)
         {
             var chore = await _choreService.GetByIdAsync(id);
-
             if (chore == null)
             {
                 return NotFound();
             }
 
-            var result = new ChoreResponseDto
-            {
-                Id = chore.Id,
-                Name = chore.Name,
-                Description = chore.Description,
-                Active = chore.Active,
-                IsCompleted = chore.isCompleted,
-                CategoryId = chore.CategoryId,
-                CategoryName = chore.Category?.Name
-            };
-
-            return Ok(result);
+            return Ok(MapToResponseDto(chore));
         }
 
         [HttpPost]
@@ -83,23 +78,12 @@ namespace CrudTaskAPI.Controllers
                 Active = choreDto.Active,
                 isCompleted = choreDto.IsCompleted,
                 CategoryId = choreDto.CategoryId,
-                Category = categoryExists
+                Category = categoryExists,
+                Progress = choreDto.Progress
             };
 
             await _choreService.AddAsync(chore);
-
-            var response = new ChoreResponseDto
-            {
-                Id = chore.Id,
-                Name = chore.Name,
-                Description = chore.Description,
-                Active = chore.Active,
-                IsCompleted = chore.isCompleted,
-                CategoryId = chore.CategoryId,
-                CategoryName = chore.Category?.Name
-            };
-
-            return CreatedAtAction(nameof(GetChore), new { id = chore.Id }, response);
+            return CreatedAtAction(nameof(GetChore), new { id = chore.Id }, MapToResponseDto(chore));
         }
 
         [HttpPut("{id}")]
@@ -121,21 +105,10 @@ namespace CrudTaskAPI.Controllers
             existingChore.Description = choreDto.Description;
             existingChore.Active = choreDto.Active;
             existingChore.isCompleted = choreDto.IsCompleted;
+            existingChore.Progress = choreDto.Progress;
 
             await _choreService.UpdateAsync(existingChore);
-
-            var response = new ChoreResponseDto
-            {
-                Id = existingChore.Id,
-                Name = existingChore.Name,
-                Description = existingChore.Description,
-                Active = existingChore.Active,
-                IsCompleted = existingChore.isCompleted,
-                CategoryId = existingChore.CategoryId,
-                CategoryName = existingChore.Category?.Name
-            };
-
-            return Ok(response);
+            return Ok(MapToResponseDto(existingChore));
         }
 
         [HttpDelete("{id}")]
@@ -160,20 +133,10 @@ namespace CrudTaskAPI.Controllers
                 return NotFound();
             }
             task.isCompleted = true;
+            task.Progress = ChoreProgressEnum.Done;
             await _choreService.UpdateAsync(task);
 
-            var response = new ChoreResponseDto
-            {
-                Id = task.Id,
-                Name = task.Name,
-                Description = task.Description,
-                Active = task.Active,
-                IsCompleted = task.isCompleted,
-                CategoryId = task.CategoryId,
-                CategoryName = task.Category?.Name
-            };
-
-            return Ok(response);
+            return Ok(MapToResponseDto(task));
         }
 
         [HttpPost("uncomplete/{id}")]
@@ -186,18 +149,7 @@ namespace CrudTaskAPI.Controllers
             }
             await _choreService.UncompleteTask(chore);
 
-            var response = new ChoreResponseDto
-            {
-                Id = chore.Id,
-                Name = chore.Name,
-                Description = chore.Description,
-                Active = chore.Active,
-                IsCompleted = chore.isCompleted,
-                CategoryId = chore.CategoryId,
-                CategoryName = chore.Category?.Name
-            };
-
-            return Ok(response);
+            return Ok(MapToResponseDto(chore));
         }
 
         [HttpPost("reactive/{id}")]
@@ -211,18 +163,52 @@ namespace CrudTaskAPI.Controllers
             chore.Active = true;
             await _choreService.UpdateAsync(chore);
 
-            var response = new ChoreResponseDto
-            {
-                Id = chore.Id,
-                Name = chore.Name,
-                Description = chore.Description,
-                Active = chore.Active,
-                IsCompleted = chore.isCompleted,
-                CategoryId = chore.CategoryId,
-                CategoryName = chore.Category?.Name
-            };
+            return Ok(MapToResponseDto(chore));
+        }
 
-            return Ok(response);
+        [HttpPost("progress/do/{id}")]
+        public async Task<ActionResult<ChoreResponseDto>> SetProgressToDo(int id)
+        {
+            var chore = await _choreService.GetByIdAsync(id);
+            if (chore == null)
+            {
+                return NotFound();
+            }
+
+            chore.Progress = ChoreProgressEnum.ToDo;
+            await _choreService.UpdateAsync(chore);
+
+            return Ok(MapToResponseDto(chore));
+        }
+
+        [HttpPost("progress/doing/{id}")]
+        public async Task<ActionResult<ChoreResponseDto>> SetProgressDoing(int id)
+        {
+            var chore = await _choreService.GetByIdAsync(id);
+            if (chore == null)
+            {
+                return NotFound();
+            }
+
+            chore.Progress = ChoreProgressEnum.Doing;
+            await _choreService.UpdateAsync(chore);
+
+            return Ok(MapToResponseDto(chore));
+        }
+
+        [HttpPost("progress/done/{id}")]
+        public async Task<ActionResult<ChoreResponseDto>> SetProgressDone(int id)
+        {
+            var chore = await _choreService.GetByIdAsync(id);
+            if (chore == null)
+            {
+                return NotFound();
+            }
+
+            chore.Progress = ChoreProgressEnum.Done;
+            await _choreService.UpdateAsync(chore);
+
+            return Ok(MapToResponseDto(chore));
         }
     }
 }

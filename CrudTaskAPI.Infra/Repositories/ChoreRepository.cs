@@ -45,7 +45,7 @@ namespace CrudTaskAPI.Infra.Repositories
             var chore = await _context.chores.FindAsync(id);
             if (chore != null)
             {
-                _context.chores.Remove(chore);
+                chore.Active = false;
                 await _context.SaveChangesAsync();
             }
         }
