@@ -13,6 +13,7 @@ namespace CrudTaskAPI.Application.Interfaces
         Task UncompleteTask(Chore chore);
         Task CompletedTask(Chore chore);
         Task<Chore> GetChoreIfExistsAsync(ChoreCreateDto choredto);
+        Task<Chore> GetChoreIfExistsForUpdateAsync(int id, string name, int categoryId);
     }
 
 }

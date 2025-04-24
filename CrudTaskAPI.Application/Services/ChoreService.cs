@@ -62,5 +62,17 @@ namespace CrudTaskAPI.Application.Services
             return choreExists;
         }
 
+        public async Task<Chore> GetChoreIfExistsForUpdateAsync(int id, string name, int categoryId)
+        {
+            var chore = new Chore
+            {
+                Id = id,
+                Name = name,
+                CategoryId = categoryId
+            };
+
+            var choreExists = await _iChoreRepository.GetByChoreForUpdateAsync(chore);
+            return choreExists;
+        }
     }
 }

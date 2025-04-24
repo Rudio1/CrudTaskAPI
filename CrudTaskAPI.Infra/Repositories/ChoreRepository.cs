@@ -24,8 +24,8 @@ namespace CrudTaskAPI.Infra.Repositories
         public async Task<Chore> GetByIdAsync(int id)
         {
             return await _context.chores
-                        .Include(c => c.Category)
-                        .FirstOrDefaultAsync(c => c.Id == id);
+                .Include(c => c.Category)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task AddAsync(Chore chore)
@@ -45,13 +45,23 @@ namespace CrudTaskAPI.Infra.Repositories
             var chore = await _context.chores.FindAsync(id);
             if (chore != null)
             {
-                chore.Active = false;
+                _context.chores.Remove(chore);
                 await _context.SaveChangesAsync();
             }
         }
+
         public async Task<Chore> GetByChoreAsync(Chore chore)
         {
-            return await _context.chores.FirstOrDefaultAsync(c => c.Name == chore.Name && c.CategoryId == chore.CategoryId);
+            return await _context.chores
+                .FirstOrDefaultAsync(c => c.Name == chore.Name && c.CategoryId == chore.CategoryId);
+        }
+
+        public async Task<Chore> GetByChoreForUpdateAsync(Chore chore)
+        {
+            return await _context.chores
+                .FirstOrDefaultAsync(c => c.Name == chore.Name && 
+                                        c.CategoryId == chore.CategoryId && 
+                                        c.Id != chore.Id);
         }
     }
 }

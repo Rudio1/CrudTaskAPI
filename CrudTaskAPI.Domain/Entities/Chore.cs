@@ -9,14 +9,12 @@ namespace CrudTaskAPI.Domain.Entities
 {
     public class Chore
     {
-        [JsonIgnore]
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public bool Active { get; set; }
         public bool isCompleted { get; set; }
         public int CategoryId { get; set; }
-        [JsonIgnore]
         public Category Category = new Category();
 
         public Chore() 
