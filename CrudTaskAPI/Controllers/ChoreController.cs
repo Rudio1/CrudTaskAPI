@@ -19,25 +19,25 @@ namespace CrudTaskAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Chore>>> GetChores()
+        public async Task<ActionResult<IEnumerable<ChoreResponseDto>>> GetChores()
         {
             var chores = await _choreService.GetAllAsync();
-            var result = chores.Select(chore => new
+            var result = chores.Select(chore => new ChoreResponseDto
             {
-                chore.Id,
-                chore.Name,
-                chore.Description,
-                chore.Active,
-                chore.isCompleted,
-                category = chore.Category?.Name
+                Id = chore.Id,
+                Name = chore.Name,
+                Description = chore.Description,
+                Active = chore.Active,
+                IsCompleted = chore.isCompleted,
+                CategoryId = chore.CategoryId,
+                CategoryName = chore.Category?.Name
             });
 
             return Ok(result);
         }
 
-
         [HttpGet("{id}")]
-        public async Task<ActionResult<Chore>> GetChore(int id)
+        public async Task<ActionResult<ChoreResponseDto>> GetChore(int id)
         {
             var chore = await _choreService.GetByIdAsync(id);
 
@@ -46,22 +46,22 @@ namespace CrudTaskAPI.Controllers
                 return NotFound();
             }
 
-            var result = new
+            var result = new ChoreResponseDto
             {
-                chore.Id,
-                chore.Name,
-                chore.Description,
-                chore.Active,
-                chore.isCompleted,
-                category = chore.Category?.Name
+                Id = chore.Id,
+                Name = chore.Name,
+                Description = chore.Description,
+                Active = chore.Active,
+                IsCompleted = chore.isCompleted,
+                CategoryId = chore.CategoryId,
+                CategoryName = chore.Category?.Name
             };
 
             return Ok(result);
         }
 
-
         [HttpPost]
-        public async Task<ActionResult<Chore>> PostChore([FromBody] ChoreCreateDto choreDto)
+        public async Task<ActionResult<ChoreResponseDto>> PostChore([FromBody] ChoreCreateDto choreDto)
         {
             int categoryId = choreDto.CategoryId;
             var categoryExists = await _categoryService.GetByIdAsync(categoryId);
@@ -87,18 +87,34 @@ namespace CrudTaskAPI.Controllers
             };
 
             await _choreService.AddAsync(chore);
-            return CreatedAtAction(nameof(GetChore), new { id = chore.Id }, chore);
+
+            var response = new ChoreResponseDto
+            {
+                Id = chore.Id,
+                Name = chore.Name,
+                Description = chore.Description,
+                Active = chore.Active,
+                IsCompleted = chore.isCompleted,
+                CategoryId = chore.CategoryId,
+                CategoryName = chore.Category?.Name
+            };
+
+            return CreatedAtAction(nameof(GetChore), new { id = chore.Id }, response);
         }
 
-
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutChore(int id, [FromBody] ChoreUpdateDto choreDto)
+        public async Task<ActionResult<ChoreResponseDto>> PutChore(int id, [FromBody] ChoreUpdateDto choreDto)
         {
-
             var existingChore = await _choreService.GetByIdAsync(id);
             if (existingChore == null)
             {
                 return NotFound();
+            }
+
+            var duplicateChore = await _choreService.GetChoreIfExistsForUpdateAsync(id, choreDto.Name, existingChore.CategoryId);
+            if (duplicateChore != null)
+            {
+                return BadRequest("A chore with the same name already exists in this category.");
             }
 
             existingChore.Name = choreDto.Name;
@@ -108,7 +124,18 @@ namespace CrudTaskAPI.Controllers
 
             await _choreService.UpdateAsync(existingChore);
 
-            return NoContent();
+            var response = new ChoreResponseDto
+            {
+                Id = existingChore.Id,
+                Name = existingChore.Name,
+                Description = existingChore.Description,
+                Active = existingChore.Active,
+                IsCompleted = existingChore.isCompleted,
+                CategoryId = existingChore.CategoryId,
+                CategoryName = existingChore.Category?.Name
+            };
+
+            return Ok(response);
         }
 
         [HttpDelete("{id}")]
@@ -125,7 +152,7 @@ namespace CrudTaskAPI.Controllers
         }
 
         [HttpPost("complete/{id}")]
-        public async Task<IActionResult> CompleteTask(int id)
+        public async Task<ActionResult<ChoreResponseDto>> CompleteTask(int id)
         {
             var task = await _choreService.GetByIdAsync(id);
             if (task == null)
@@ -134,12 +161,23 @@ namespace CrudTaskAPI.Controllers
             }
             task.isCompleted = true;
             await _choreService.UpdateAsync(task);
-            return NoContent();
+
+            var response = new ChoreResponseDto
+            {
+                Id = task.Id,
+                Name = task.Name,
+                Description = task.Description,
+                Active = task.Active,
+                IsCompleted = task.isCompleted,
+                CategoryId = task.CategoryId,
+                CategoryName = task.Category?.Name
+            };
+
+            return Ok(response);
         }
 
-
         [HttpPost("uncomplete/{id}")]
-        public async Task<IActionResult> UncompleteTask(int id)
+        public async Task<ActionResult<ChoreResponseDto>> UncompleteTask(int id)
         {
             var chore = await _choreService.GetByIdAsync(id);
             if (chore == null)
@@ -148,12 +186,22 @@ namespace CrudTaskAPI.Controllers
             }
             await _choreService.UncompleteTask(chore);
 
-            return NoContent();
+            var response = new ChoreResponseDto
+            {
+                Id = chore.Id,
+                Name = chore.Name,
+                Description = chore.Description,
+                Active = chore.Active,
+                IsCompleted = chore.isCompleted,
+                CategoryId = chore.CategoryId,
+                CategoryName = chore.Category?.Name
+            };
+
+            return Ok(response);
         }
 
-
         [HttpPost("reactive/{id}")]
-        public async Task<IActionResult> ReactiveTask(int id)
+        public async Task<ActionResult<ChoreResponseDto>> ReactiveTask(int id)
         {
             var chore = await _choreService.GetByIdAsync(id);
             if (chore == null)
@@ -163,9 +211,18 @@ namespace CrudTaskAPI.Controllers
             chore.Active = true;
             await _choreService.UpdateAsync(chore);
 
-            return NoContent();
+            var response = new ChoreResponseDto
+            {
+                Id = chore.Id,
+                Name = chore.Name,
+                Description = chore.Description,
+                Active = chore.Active,
+                IsCompleted = chore.isCompleted,
+                CategoryId = chore.CategoryId,
+                CategoryName = chore.Category?.Name
+            };
+
+            return Ok(response);
         }
-
-
     }
 }

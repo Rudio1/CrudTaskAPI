@@ -15,21 +15,19 @@ namespace CrudTaskAPI.Infra.Data.Repositories
 
         public async Task<IEnumerable<Category>> GetAllAsync()
         {
-            // Ajustando para retornar uma Task de IEnumerable<Category>
             return await _context.Categories
                 .Select(c => new Category
                 {
                     Id = c.Id,
                     Name = c.Name
                 })
-                .ToListAsync();  // Espera assíncrona
+                .ToListAsync();
         }
-
-
 
         public async Task<Category> GetByIdAsync(int id)
         {
             return await _context.Categories
+                .Include(c => c.Chores)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 

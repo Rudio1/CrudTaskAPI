@@ -10,5 +10,6 @@ namespace CrudTaskAPI.Domain.Interfaces
         Task UpdateAsync(Chore chore);
         Task DeleteAsync(int id);
         Task<Chore> GetByChoreAsync(Chore chore);
+        Task<Chore> GetByChoreForUpdateAsync(Chore chore);
     }
 }
