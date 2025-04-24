@@ -1,3 +1,4 @@
+using CrudTaskAPI.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,7 @@ namespace CrudTaskAPI.Application.Dto
         public bool IsCompleted { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; }
+        public ChoreProgressEnum Progress { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 } 

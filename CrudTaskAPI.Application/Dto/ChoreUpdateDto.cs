@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CrudTaskAPI.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +13,6 @@ namespace CrudTaskAPI.Application.Dto
         public string Description { get; set; }
         public bool Active { get; set; }
         public bool IsCompleted { get; set; }
+        public ChoreProgressEnum Progress { get; set; }
     }
 }
